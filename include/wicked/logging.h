@@ -73,6 +73,7 @@ enum {
 	NI_TRACE_TIMER		= NI_BIT(18),
 	NI_TRACE_IPV4		= NI_BIT(19),
 	NI_TRACE_ROUTE		= NI_BIT(20),
+	NI_TRACE_ARGS		= NI_BIT(21),
 };
 
 extern unsigned int	ni_debug;
@@ -110,6 +111,7 @@ extern unsigned int	ni_log_level;
 #define ni_debug_lldp(fmt, args...)		__ni_debug(NI_LOG_DEBUG, NI_TRACE_LLDP, fmt, ##args)
 #define ni_debug_timer(fmt, args...)		__ni_debug(NI_LOG_DEBUG, NI_TRACE_TIMER, fmt, ##args)
 #define ni_debug_route(fmt, args...)		__ni_debug(NI_LOG_DEBUG, NI_TRACE_ROUTE, fmt, ##args)
+#define ni_debug_args(fmt, args...)		__ni_debug(NI_LOG_DEBUG, NI_TRACE_ARGS, fmt, ##args)
 
 #define ni_debug_nanny				ni_debug_application
 

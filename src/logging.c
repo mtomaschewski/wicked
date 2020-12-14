@@ -62,6 +62,7 @@ static const ni_intmap_t	__debug_flags_names[] = {
 	{ "lldp",	NI_TRACE_LLDP },
 	{ "timer",	NI_TRACE_TIMER },
 	{ "route",	NI_TRACE_ROUTE },
+	{ "args",	NI_TRACE_ARGS },
 
 	{ "mini",	NI_TRACE_MINI },
 	{ "most", 	NI_TRACE_MOST },
@@ -95,6 +96,7 @@ static const ni_intmap_t	__debug_flags_descriptions[] = {
 	{ "LLDP agent",					NI_TRACE_LLDP },
 	{ "Internal timer",				NI_TRACE_TIMER },
 	{ "Routing configuration",			NI_TRACE_ROUTE },
+	{ "Argument processing",			NI_TRACE_ARGS },
 
 	{ "Minimal debug facility set :-)", 		NI_TRACE_MINI },
 	{ "All useful debug facility set :-)", 		NI_TRACE_MOST },
