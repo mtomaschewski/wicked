@@ -18,6 +18,8 @@ typedef unsigned char		ni_bool_t;
 # define FALSE 0
 #endif
 
+#define NI_BIT(nr)		(1U << (nr))
+
 typedef enum {
 	NI_TRISTATE_DEFAULT	= -1,
 	NI_TRISTATE_DISABLE	= 0,
