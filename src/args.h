@@ -51,7 +51,7 @@ typedef enum {
 
 #define NI_WICKED_COMMON_OPTION_HELP {				\
 	"help",	no_argument, NULL, NI_WICKED_COMMON_OPT_HELP,	\
-		NULL, "Show this help text and exit."		\
+		NULL,	"Show this help text and exit."		\
 }
 
 #define NI_WICKED_COMMON_OPTIONS				\

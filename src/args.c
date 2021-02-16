@@ -26,15 +26,6 @@
 #include "config.h"
 #endif
 
-#include <wicked/util.h>
-#include <wicked/logging.h>
-
-#include "args.h"
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #include <stdio.h>
 #include <string.h>
 #include <stdarg.h>
@@ -47,6 +38,10 @@
 #include <ctype.h>
 
 #include <wicked/util.h>
+#include <wicked/logging.h>
+
+#include "args.h"
+
 
 /*
  * We format help as 1) option/action, 2) argument/synopis and 3) documentation column:
@@ -107,7 +102,8 @@ ni_wicked_ctx_init(ni_wicked_ctx_t *ctx, const ni_wicked_ctx_t *caller, const ch
 	else
 		ctx->verbosity = NI_VERBOSITY_UNSET;
 
-
+	/* (re-)initialize global getopt option start index */
+	optind = 1;
 
 	return 0;
 }
@@ -270,7 +266,6 @@ ni_wicked_ctx_exec(const ni_wicked_ctx_t *caller, int argc, char *argv[])
 		if (!ni_string_eq(action->name, argv[0]))
 			continue;
 
-		optind = 0;
 		ni_wicked_ctx_init(&ctx, caller, argv[0]);
 		status = action->exec(&ctx, argc, argv);
 		ni_wicked_ctx_destroy(&ctx);
@@ -577,11 +572,9 @@ ni_wicked_ctx_hint_format(ni_stringbuf_t *obuf, const ni_wicked_ctx_t *ctx)
 
 	olen = obuf->len;
 
-        ni_stringbuf_printf(obuf, "Try '%s --help' for more information.", ctx->command);
-        return obuf->len - olen;
+	ni_stringbuf_printf(obuf, "Try '%s --help' for more information.", ctx->command);
+	return obuf->len - olen;
 }
-
-
 
 size_t
 ni_wicked_ctx_help_print(FILE *output, const ni_wicked_ctx_t *ctx)
@@ -593,6 +586,7 @@ ni_wicked_ctx_help_print(FILE *output, const ni_wicked_ctx_t *ctx)
 		fputs(obuf.string, output);
 		fflush(output);
 	}
+
 	len = obuf.len;
 	ni_stringbuf_destroy(&obuf);
 	return len;
@@ -606,22 +600,21 @@ ni_wicked_ctx_hint_print(FILE *output, const ni_wicked_ctx_t *ctx, const char *e
 
 	if (err) {
 		va_list ap;
-                va_start(ap, err);
-                ni_stringbuf_vprintf(&obuf, err, ap);
-                va_end(ap);
-
+		va_start(ap, err);
+		ni_stringbuf_vprintf(&obuf, err, ap);
+		va_end(ap);
 	}
 
-       /* getopt and NULL or a custom err were printed, insert new line */
-        ni_stringbuf_putc(&obuf, '\n');
+	/* getopt and NULL or a custom err were printed, insert new line */
+	ni_stringbuf_putc(&obuf, '\n');
 
 	if (ni_wicked_ctx_hint_format(&obuf, ctx) && obuf.string)
  		ni_stringbuf_putc(&obuf, '\n');
 
-        fputs(obuf.string, output);
-        fflush(output);
+	fputs(obuf.string, output);
+	fflush(output);
 
-        len = obuf.len;
-        ni_stringbuf_destroy(&obuf);
-        return len;
+	len = obuf.len;
+	ni_stringbuf_destroy(&obuf);
+	return len;
 }
