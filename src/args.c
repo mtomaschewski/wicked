@@ -248,32 +248,53 @@ ni_wicked_ctx_get_option(const ni_wicked_ctx_t *ctx, int opt)
 	return NULL;
 }
 
-int
-ni_wicked_ctx_exec(const ni_wicked_ctx_t *caller, int argc, char *argv[])
+const ni_wicked_action_t *
+ni_wicked_action_find(const ni_wicked_action_t *actions, const char *name)
 {
 	const ni_wicked_action_t *action;
+
+	for (action = actions; action->name; ++action) {
+		if (ni_string_eq(action->name, name))
+			return action;
+	}
+	return NULL;
+}
+
+int
+ni_wicked_action_exec(const ni_wicked_action_t *action,
+			const ni_wicked_ctx_t *caller,
+			int argc, char *argv[])
+{
 	ni_wicked_ctx_t ctx;
 	int status;
 
-	ni_assert(caller && argv);
+	ni_assert(action && action->exec && argv);
+
+	ni_wicked_ctx_init(&ctx, caller, action->name);
+	status = action->exec(&ctx, argc, argv);
+	ni_wicked_ctx_destroy(&ctx);
+	return status;
+}
+
+int
+ni_wicked_ctx_exec(const ni_wicked_ctx_t *ctx, int argc, char *argv[])
+{
+	const ni_wicked_action_t *action;
+
+	ni_assert(ctx && argv);
 
 	if (argc < 1 || ni_string_empty(argv[0])) {
-		fprintf(stderr, "%s: missing action\n\n", caller->command);
-		return -ENOENT;
+		ni_wicked_ctx_hint_print(stderr, ctx, "missing action");
+		return NI_WICKED_RC_USAGE;
 	}
 
-	for (action = caller->actions; action->name; ++action) {
-		if (!ni_string_eq(action->name, argv[0]))
-			continue;
-
-		ni_wicked_ctx_init(&ctx, caller, argv[0]);
-		status = action->exec(&ctx, argc, argv);
-		ni_wicked_ctx_destroy(&ctx);
-		return status;
+	action = ni_wicked_action_find(ctx->actions, argv[0]);
+	if (!action) {
+		ni_wicked_ctx_hint_print(stderr, ctx,
+				"unrecognized action '%s'", argv[0]);
+		return NI_WICKED_RC_NOT_IMPLEMENTED;
 	}
-
-	fprintf(stderr, "%s: unrecognized action '%s'\n\n", caller->command, argv[0]);
-	return -ESRCH;
+	return ni_wicked_action_exec(action, ctx, argc, argv);
 }
 
 int
