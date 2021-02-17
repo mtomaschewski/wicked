@@ -36,6 +36,7 @@ libwicked_la_LIBADD		= libwicked-dbus-objects.la	\
 
 libwicked_la_SOURCES		= \
 	address.c		\
+	args.c			\
 	arp.c			\
 	async-resolver.c	\
 	auto6.c			\
@@ -188,6 +189,7 @@ system_headers			= \
 
 wicked_headers			= \
 	appconfig.h		\
+	args.h			\
 	auto6.h			\
 	buffer.h		\
 	client/client_state.h	\
