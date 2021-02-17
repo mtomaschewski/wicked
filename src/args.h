@@ -124,7 +124,7 @@ extern const ni_wicked_action_t *	ni_wicked_action_find(const ni_wicked_action_t
 extern int				ni_wicked_action_exec(const ni_wicked_action_t *action,
 							const ni_wicked_ctx_t *caller,
 							int argc, char *argv[]);
-extern int				ni_wicked_ctx_exec(const ni_wicked_ctx_t *ctx,
+extern int				ni_wicked_ctx_action_exec(const ni_wicked_ctx_t *ctx,
 							int argc, char *argv[]);
 
 extern size_t				ni_wicked_ctx_help_print(FILE *output,

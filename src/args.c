@@ -277,7 +277,7 @@ ni_wicked_action_exec(const ni_wicked_action_t *action,
 }
 
 int
-ni_wicked_ctx_exec(const ni_wicked_ctx_t *ctx, int argc, char *argv[])
+ni_wicked_ctx_action_exec(const ni_wicked_ctx_t *ctx, int argc, char *argv[])
 {
 	const ni_wicked_action_t *action;
 
