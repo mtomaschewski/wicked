@@ -76,7 +76,7 @@ struct ni_wicked_option {
 
 struct ni_wicked_action {
 	const char *			name;		/* action name              */
-	ni_wicked_action_exec_fn_t *	exec;		/* action function          */
+	ni_wicked_action_exec_fn_t *	exec;		/* action "main" function   */
 
 	const char *			doc_args;	/* action argument synopis  */
 	const char *			doc_info;	/* action list description  */
@@ -85,6 +85,7 @@ struct ni_wicked_action {
 struct ni_wicked_ctx {
 	const char *			name;		/* current action name      */
 	const ni_wicked_ctx_t *		caller;		/* action caller context    */
+
 	const ni_wicked_option_t *	options;	/* current action options   */
 	const ni_wicked_action_t *	actions;	/* child actions            */
 
@@ -118,7 +119,12 @@ extern int				ni_wicked_ctx_getopt(ni_wicked_ctx_t *ctx,
 							int argc, char *argv[],
 							const ni_wicked_option_t **);
 
-extern int				ni_wicked_ctx_exec(const ni_wicked_ctx_t *caller,
+extern const ni_wicked_action_t *	ni_wicked_action_find(const ni_wicked_action_t *list,
+							const char *name);
+extern int				ni_wicked_action_exec(const ni_wicked_action_t *action,
+							const ni_wicked_ctx_t *caller,
+							int argc, char *argv[]);
+extern int				ni_wicked_ctx_action_exec(const ni_wicked_ctx_t *ctx,
 							int argc, char *argv[]);
 
 extern size_t				ni_wicked_ctx_help_print(FILE *output,
