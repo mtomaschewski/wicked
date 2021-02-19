@@ -119,35 +119,19 @@ extern int				ni_wicked_ctx_getopt(ni_wicked_ctx_t *ctx,
 							int argc, char *argv[],
 							const ni_wicked_option_t **);
 
+extern int				ni_wicked_ctx_action_exec(const ni_wicked_ctx_t *ctx,
+							int argc, char *argv[]);
+
+extern void				ni_wicked_ctx_hint_print(FILE *output,
+							const ni_wicked_ctx_t *ctx,
+							const char *err, ...);
+extern void				ni_wicked_ctx_help_print(FILE *output,
+							const ni_wicked_ctx_t *ctx);
+
 extern const ni_wicked_action_t *	ni_wicked_action_find(const ni_wicked_action_t *list,
 							const char *name);
 extern int				ni_wicked_action_exec(const ni_wicked_action_t *action,
 							const ni_wicked_ctx_t *caller,
 							int argc, char *argv[]);
-extern int				ni_wicked_ctx_action_exec(const ni_wicked_ctx_t *ctx,
-							int argc, char *argv[]);
-
-extern size_t				ni_wicked_ctx_help_print(FILE *output,
-							const ni_wicked_ctx_t *ctx);
-
-extern size_t				ni_wicked_ctx_hint_print(FILE *output,
-							const ni_wicked_ctx_t *ctx,
-							const char *err, ...);
-
-extern size_t				ni_wicked_ctx_help_format(ni_stringbuf_t *buf,
-							const ni_wicked_ctx_t *ctx);
-extern size_t				ni_wicked_ctx_help_format_usage(ni_stringbuf_t *obuf,
-							const ni_wicked_ctx_t *ctx,
-							const char *section);
-extern size_t				ni_wicked_ctx_help_format_options(ni_stringbuf_t *obuf,
-							const ni_wicked_ctx_t *ctx,
-							const char *section);
-extern size_t				ni_wicked_ctx_help_format_actions(ni_stringbuf_t *obuf,
-							const ni_wicked_ctx_t *ctx,
-							const char *section);
-extern size_t				ni_wicked_ctx_help_format_option(ni_stringbuf_t *obuf,
-							const ni_wicked_option_t *option);
-extern size_t				ni_wicked_ctx_help_format_action(ni_stringbuf_t *obuf,
-							const ni_wicked_action_t *action);
 
 #endif /* WICKED_CLIENT_ARGS_H */

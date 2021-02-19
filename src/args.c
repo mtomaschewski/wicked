@@ -315,7 +315,7 @@ ni_wicked_ctx_getopt(ni_wicked_ctx_t *ctx, int argc, char *argv[], const ni_wick
 	return opt;
 }
 
-size_t
+static size_t
 ni_wicked_ctx_help_format_usage(ni_stringbuf_t *obuf, const ni_wicked_ctx_t *ctx, const char *section)
 {
 	size_t olen;
@@ -344,7 +344,7 @@ ni_wicked_ctx_help_format_usage(ni_stringbuf_t *obuf, const ni_wicked_ctx_t *ctx
 	return obuf->len - olen;
 }
 
-size_t
+static size_t
 ni_wicked_ctx_help_format_option(ni_stringbuf_t *obuf, const ni_wicked_option_t *option)
 {
 	ni_stringbuf_t buf = NI_STRINGBUF_INIT_DYNAMIC;
@@ -439,7 +439,7 @@ ni_wicked_ctx_help_format_option(ni_stringbuf_t *obuf, const ni_wicked_option_t 
 	return obuf->len - olen;
 }
 
-size_t
+static size_t
 ni_wicked_ctx_help_format_options(ni_stringbuf_t *obuf, const ni_wicked_ctx_t *ctx, const char *section)
 {
 	const ni_wicked_option_t *option;
@@ -465,7 +465,7 @@ ni_wicked_ctx_help_format_options(ni_stringbuf_t *obuf, const ni_wicked_ctx_t *c
 	return obuf->len - olen;
 }
 
-size_t
+static size_t
 ni_wicked_ctx_help_format_action(ni_stringbuf_t *obuf, const ni_wicked_action_t *action)
 {
 	ni_stringbuf_t buf = NI_STRINGBUF_INIT_DYNAMIC;
@@ -532,7 +532,7 @@ ni_wicked_ctx_help_format_action(ni_stringbuf_t *obuf, const ni_wicked_action_t 
 	return obuf->len - olen;
 }
 
-size_t
+static size_t
 ni_wicked_ctx_help_format_actions(ni_stringbuf_t *obuf, const ni_wicked_ctx_t *ctx, const char *section)
 {
 	const ni_wicked_action_t *action;
@@ -558,7 +558,7 @@ ni_wicked_ctx_help_format_actions(ni_stringbuf_t *obuf, const ni_wicked_ctx_t *c
 	return obuf->len - olen;
 }
 
-size_t
+static size_t
 ni_wicked_ctx_help_format(ni_stringbuf_t *obuf, const ni_wicked_ctx_t *ctx)
 {
 	size_t olen;
@@ -583,7 +583,7 @@ ni_wicked_ctx_help_format(ni_stringbuf_t *obuf, const ni_wicked_ctx_t *ctx)
 	return obuf->len - olen;
 }
 
-size_t
+static size_t
 ni_wicked_ctx_hint_format(ni_stringbuf_t *obuf, const ni_wicked_ctx_t *ctx)
 {
 	size_t olen;
@@ -597,27 +597,23 @@ ni_wicked_ctx_hint_format(ni_stringbuf_t *obuf, const ni_wicked_ctx_t *ctx)
 	return obuf->len - olen;
 }
 
-size_t
+void
 ni_wicked_ctx_help_print(FILE *output, const ni_wicked_ctx_t *ctx)
 {
 	ni_stringbuf_t obuf = NI_STRINGBUF_INIT_DYNAMIC;
-	size_t len;
 
 	if (ni_wicked_ctx_help_format(&obuf, ctx) && obuf.string) {
 		fputs(obuf.string, output);
 		fflush(output);
 	}
 
-	len = obuf.len;
 	ni_stringbuf_destroy(&obuf);
-	return len;
 }
 
-size_t
+void
 ni_wicked_ctx_hint_print(FILE *output, const ni_wicked_ctx_t *ctx, const char *err, ...)
 {
 	ni_stringbuf_t obuf = NI_STRINGBUF_INIT_DYNAMIC;
-	size_t len;
 
 	if (err) {
 		va_list ap;
@@ -635,7 +631,5 @@ ni_wicked_ctx_hint_print(FILE *output, const ni_wicked_ctx_t *ctx, const char *e
 	fputs(obuf.string, output);
 	fflush(output);
 
-	len = obuf.len;
 	ni_stringbuf_destroy(&obuf);
-	return len;
 }
