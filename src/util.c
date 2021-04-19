@@ -2014,6 +2014,50 @@ ni_parse_hex(const char *string, unsigned char *data, unsigned int datasize)
 }
 
 unsigned int
+ni_parse_bitmap_array(unsigned int *mask, const ni_intmap_t *map, const ni_string_array_t *array,
+			ni_string_array_t *invalid)
+{
+	unsigned int i, flag;
+	const char *name;
+	unsigned int err;
+
+	if (!mask || !map || !array)
+		return -1U;
+
+	for (err = 0, i = 0; i < array->count; ++i) {
+		name = array->data[i];
+
+		if (!ni_parse_uint_mapped(name, map, &flag) &&
+				flag < 8 * sizeof(*mask)) {
+			*mask |= NI_BIT(flag);
+		} else {
+			if (invalid)
+				ni_string_array_append(invalid, name);
+			err++;
+		}
+	}
+
+	return err;
+}
+
+unsigned int
+ni_parse_bitmap_string(unsigned int *mask, const ni_intmap_t *map, const char *input,
+		const char *sep, ni_string_array_t *invalid)
+{
+	ni_string_array_t array = NI_STRING_ARRAY_INIT;
+	unsigned int err;
+
+	if (!mask || !map || !input)
+		return -1U;
+
+	ni_string_split(&array, input, sep, 0);
+	err = ni_parse_bitmap_array(mask, map, &array, invalid);
+	ni_string_array_destroy(&array);
+
+	return err;
+}
+
+unsigned int
 ni_format_bitmap_array(ni_string_array_t *array, const ni_intmap_t *map,
 		unsigned int mask, unsigned int *done)
 {
