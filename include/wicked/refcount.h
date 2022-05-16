@@ -23,30 +23,23 @@
 #ifndef WICKED_REFCOUNT_H
 #define WICKED_REFCOUNT_H
 
-#include <wicked/types.h>
-
 typedef unsigned int	ni_refcount_t;
 
-inline void		ni_refcount_init(ni_refcount_t *refcount)
-{
-	ni_assert(refcount);
-	*refcount = 1;
-}
+#define ni_refcount_init(ref)		({			\
+		ref->refcount = 1;				\
+	})
 
-inline ni_bool_t	ni_refcount_increment(ni_refcount_t *refcount)
-{
-	ni_assert(refcount && *refcount);
-	(*refcount)++;
-	return *refcount != 0;
-}
+#define ni_refcount_increment(ref)	({			\
+		ni_assert(ref->refcount);			\
+		ref->refcount++;				\
+		ref->refcount != 0;				\
+	})
 
-inline ni_bool_t	ni_refcount_decrement(ni_refcount_t *refcount)
-{
-	ni_assert(refcount && *refcount);
-	(*refcount)--;
-	return *refcount == 0;
-}
-
+#define ni_refcount_decrement(ref)	({			\
+		ni_assert(ref->refcount);			\
+		ref->refcount--;				\
+		ref->refcount == 0;				\
+	})
 
 #define ni_declare_refcounted_ref(object)			\
 object##_t *		object##_ref(object##_t *)
@@ -64,7 +57,7 @@ ni_bool_t		object##_move(object##_t **, object##_t **)
 object##_t *							\
 object##_ref(object##_t *ref)					\
 {								\
-	if (ref && ni_refcount_increment(&ref->refcount))	\
+	if (ref && ni_refcount_increment(ref))			\
 		return ref;					\
 	return NULL;						\
 }
@@ -73,7 +66,7 @@ object##_ref(object##_t *ref)					\
 void								\
 object##_free(object##_t *ref)					\
 {								\
-	if (ref && ni_refcount_decrement(&ref->refcount)) {	\
+	if (ref && ni_refcount_decrement(ref)) {		\
 		object##_destroy(ref);				\
 		free(ref);					\
 	}							\

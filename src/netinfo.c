@@ -1213,7 +1213,7 @@ ni_addrconf_lease_new(int type, int family)
 
 	lease = calloc(1, sizeof(*lease));
 	if (lease) {
-		ni_refcount_init(&lease->refcount);
+		ni_refcount_init(lease);
 		lease->seqno = __ni_global_seqno++;
 		lease->type = type;
 		lease->family = family;
