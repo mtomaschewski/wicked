@@ -1737,6 +1737,30 @@ ni_route_table_clear(ni_route_table_t *tab)
 /*
  * ni_route_tables list functions
  */
+void
+ni_route_tables_copy(ni_route_table_t **dst,  const ni_route_table_t *src)
+{
+	const ni_route_table_t *srt;
+	const ni_route_t *srp;
+	ni_route_table_t *rt;
+	unsigned int i;
+
+	if (!dst)
+		return;
+
+	for (srt = src; srt; srt = srt->next) {
+		if (!(rt = ni_route_table_new(srt->tid)))
+			continue;
+
+		for (i = 0; i < srt->routes.count; ++i) {
+			if (!(srp = srt->routes.data[i]))
+				continue;
+
+			ni_route_array_append(&rt->routes, ni_route_clone(srp));
+		}
+	}
+}
+
 ni_bool_t
 ni_route_tables_add_route(ni_route_table_t **list, ni_route_t *rp)
 {
@@ -2314,11 +2338,35 @@ ni_rule_array_new(void)
 	return xcalloc(1, sizeof(ni_rule_array_t));
 }
 
+ni_rule_array_t *
+ni_rule_array_clone(const ni_rule_array_t *orig)
+{
+	ni_rule_array_t *clone;
+
+	if (!orig || !(clone = ni_rule_array_new()))
+		return NULL;
+
+	ni_rule_array_copy(clone, orig);
+	return clone;
+}
+
 void
 ni_rule_array_free(ni_rule_array_t *rules)
 {
 	ni_rule_array_destroy(rules);
 	free(rules);
+}
+
+void
+ni_rule_array_copy(ni_rule_array_t *dst, const ni_rule_array_t *src)
+{
+	unsigned int i;
+
+	if (!src || !dst)
+		return;
+
+	for (i = 0; i < src->count; ++i)
+		ni_rule_array_append(dst, ni_rule_clone(src->data[i]));
 }
 
 unsigned int

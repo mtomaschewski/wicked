@@ -267,6 +267,7 @@ extern ni_route_table_t *	ni_route_table_new(unsigned int);
 extern void			ni_route_table_free(ni_route_table_t *);
 extern void			ni_route_table_clear(ni_route_table_t *);
 
+extern void			ni_route_tables_copy(ni_route_table_t **, const ni_route_table_t *);
 extern ni_bool_t		ni_route_tables_add_route(ni_route_table_t **, ni_route_t *);
 extern ni_bool_t		ni_route_tables_add_routes(ni_route_table_t **, ni_route_array_t *);
 
@@ -297,9 +298,11 @@ extern const char *		ni_rule_action_type_to_name(unsigned int);
 extern ni_bool_t		ni_rule_action_name_to_type(const char *, unsigned int *);
 
 extern ni_rule_array_t *	ni_rule_array_new(void);
+extern ni_rule_array_t *	ni_rule_array_clone(const ni_rule_array_t *);
 extern void			ni_rule_array_free(ni_rule_array_t *);
 extern void			ni_rule_array_init(ni_rule_array_t *);
 extern void			ni_rule_array_destroy(ni_rule_array_t *);
+extern void			ni_rule_array_copy(ni_rule_array_t *, const ni_rule_array_t *);
 extern unsigned int		ni_rule_array_index(const ni_rule_array_t *, const ni_rule_t *);
 extern ni_bool_t		ni_rule_array_append(ni_rule_array_t *, ni_rule_t *);
 extern ni_bool_t		ni_rule_array_insert(ni_rule_array_t *, unsigned int, ni_rule_t *);

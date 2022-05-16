@@ -19,6 +19,7 @@ struct ni_resolver_info {
 };
 
 extern ni_resolver_info_t *	ni_resolver_info_new(void);
+extern ni_resolver_info_t *	ni_resolver_info_clone(const ni_resolver_info_t *);
 extern void			ni_resolver_info_free(ni_resolver_info_t *);
 extern ni_resolver_info_t *	ni_resolver_parse_resolv_conf(const char *);
 extern int			ni_resolver_write_resolv_conf(const char *, const ni_resolver_info_t *, const char *);

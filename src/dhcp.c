@@ -131,6 +131,23 @@ ni_dhcp_option_list_append(ni_dhcp_option_t **list, ni_dhcp_option_t *opt)
 	return TRUE;
 }
 
+ni_bool_t
+ni_dhcp_option_list_copy(ni_dhcp_option_t **dst, const ni_dhcp_option_t *src)
+{
+	const ni_dhcp_option_t *oopt;
+	ni_dhcp_option_t *nopt;
+
+	if (!dst)
+		return FALSE;
+
+	for (oopt = src; oopt; oopt = oopt->next) {
+		nopt = ni_dhcp_option_new(oopt->code, oopt->len, oopt->data);
+		if (!ni_dhcp_option_list_append(dst, nopt))
+			ni_dhcp_option_free(nopt);
+	}
+	return TRUE;
+}
+
 ni_dhcp_option_t *
 ni_dhcp_option_list_find(ni_dhcp_option_t *list, unsigned int code)
 {

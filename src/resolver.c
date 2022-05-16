@@ -101,6 +101,21 @@ ni_resolver_info_new(void)
 	return calloc(1, sizeof(ni_resolver_info_t));
 }
 
+ni_resolver_info_t *
+ni_resolver_info_clone(const ni_resolver_info_t *orig)
+{
+	ni_resolver_info_t *clone;
+
+	if (!orig || !(clone = ni_resolver_info_new()))
+		return NULL;
+
+	ni_string_dup(&clone->default_domain,      orig->default_domain);
+	ni_string_array_copy(&clone->dns_servers, &orig->dns_servers);
+	ni_string_array_copy(&clone->dns_search,  &orig->dns_search);
+
+	return clone;
+}
+
 void
 ni_resolver_info_free(ni_resolver_info_t *resolv)
 {

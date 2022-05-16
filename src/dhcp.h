@@ -46,6 +46,7 @@ extern void				ni_dhcp_option_free(ni_dhcp_option_t *);
  */
 extern void				ni_dhcp_option_list_destroy(ni_dhcp_option_t **);
 extern ni_bool_t			ni_dhcp_option_list_append(ni_dhcp_option_t **, ni_dhcp_option_t *);
+extern ni_bool_t			ni_dhcp_option_list_copy(ni_dhcp_option_t **, const ni_dhcp_option_t *);
 extern ni_dhcp_option_t *		ni_dhcp_option_list_find(ni_dhcp_option_t *, unsigned int);
 extern ni_dhcp_option_t *		ni_dhcp_option_list_pull(ni_dhcp_option_t **);
 

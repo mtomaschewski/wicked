@@ -120,6 +120,7 @@ typedef struct ni_dhcp_option		ni_dhcp_option_t;
 typedef struct ni_addrconf_updater	ni_addrconf_updater_t;
 
 struct ni_addrconf_lease {
+	unsigned int		refcount;
 	ni_addrconf_lease_t *	next;
 
 	ni_addrconf_updater_t *	updater;	/* update actions	*/
@@ -213,6 +214,11 @@ enum ni_lease_event {
 };
 
 extern ni_addrconf_lease_t *ni_addrconf_lease_new(int type, int family);
+extern ni_addrconf_lease_t *ni_addrconf_lease_ref(ni_addrconf_lease_t *);
+extern ni_addrconf_lease_t *ni_addrconf_lease_clone(const ni_addrconf_lease_t *);
+extern ni_bool_t        ni_addrconf_lease_hold(ni_addrconf_lease_t **, ni_addrconf_lease_t *);
+extern ni_bool_t        ni_addrconf_lease_drop(ni_addrconf_lease_t **);
+extern ni_bool_t        ni_addrconf_lease_move(ni_addrconf_lease_t **, ni_addrconf_lease_t **);
 extern void		ni_addrconf_lease_destroy(ni_addrconf_lease_t *);
 extern void		ni_addrconf_lease_free(ni_addrconf_lease_t *);
 extern void		ni_addrconf_lease_list_destroy(ni_addrconf_lease_t **list);

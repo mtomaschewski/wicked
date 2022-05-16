@@ -145,6 +145,34 @@ ni_nis_info_new(void)
 	return calloc(1, sizeof(ni_nis_info_t));
 }
 
+ni_nis_info_t *
+ni_nis_info_clone(const ni_nis_info_t *orig)
+{
+	const ni_nis_domain_t *odom;
+	ni_nis_domain_t *ndom;
+	ni_nis_info_t *clone;
+	unsigned int i;
+
+	if (!orig || !(clone = ni_nis_info_new()))
+		return NULL;
+
+	ni_string_dup(&clone->domainname, orig->domainname);
+	clone->default_binding = orig->default_binding;
+	ni_string_array_copy(&clone->default_servers, &orig->default_servers);
+
+	for (i = 0; i < orig->domains.count; ++i) {
+		if (!(odom = orig->domains.data[i]))
+			continue;
+
+		if (!(ndom = ni_nis_domain_new(clone, odom->domainname)))
+			continue;
+
+		ndom->binding = odom->binding;
+		ni_string_array_copy(&ndom->servers, &odom->servers);
+	}
+	return clone;
+}
+
 void
 ni_nis_info_free(ni_nis_info_t *nis)
 {

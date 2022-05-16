@@ -456,6 +456,18 @@ ni_address_list_dedup(ni_address_t **list)
 	}
 }
 
+void
+ni_address_list_copy(ni_address_t **dst, const ni_address_t *src)
+{
+	const ni_address_t *sap;
+
+	if (!dst)
+		return;
+
+	for (sap = src; sap; sap = sap->next)
+		ni_address_list_append(dst, ni_address_clone(sap));
+}
+
 unsigned int
 ni_address_list_count(ni_address_t *list)
 {
