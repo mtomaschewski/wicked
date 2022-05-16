@@ -1213,7 +1213,7 @@ ni_addrconf_lease_new(int type, int family)
 
 	lease = calloc(1, sizeof(*lease));
 	if (lease) {
-		lease->refcount = 1;
+		ni_refcount_init(&lease->refcount);
 		lease->seqno = __ni_global_seqno++;
 		lease->type = type;
 		lease->family = family;
@@ -1222,15 +1222,11 @@ ni_addrconf_lease_new(int type, int family)
 	return lease;
 }
 
-ni_addrconf_lease_t *
-ni_addrconf_lease_ref(ni_addrconf_lease_t *lease)
-{
-	if (lease) {
-		ni_assert(lease->refcount);
-		lease->refcount++;
-	}
-	return lease;
-}
+extern ni_define_refcounted_ref(ni_addrconf_lease);
+extern ni_define_refcounted_hold(ni_addrconf_lease);
+extern ni_define_refcounted_free(ni_addrconf_lease);
+extern ni_define_refcounted_drop(ni_addrconf_lease);
+extern ni_define_refcounted_move(ni_addrconf_lease);
 
 static inline void
 ni_addrconf_lease_clone_dhcp4(struct ni_addrconf_lease_dhcp4 *clone, const struct ni_addrconf_lease_dhcp4 *orig)
@@ -1337,55 +1333,6 @@ ni_addrconf_lease_clone(const ni_addrconf_lease_t *orig)
 			ni_addrconf_lease_clone_dhcp6(&clone->dhcp6, &orig->dhcp6);
 	}
 	return clone;
-}
-
-ni_bool_t
-ni_addrconf_lease_hold(ni_addrconf_lease_t **leasep, ni_addrconf_lease_t *lease)
-{
-	ni_addrconf_lease_t *old;
-
-	if (leasep && lease) {
-		old = *leasep;
-		*leasep = ni_addrconf_lease_ref(lease);
-		ni_addrconf_lease_free(old);
-		return TRUE;
-	}
-	return FALSE;
-}
-
-ni_bool_t
-ni_addrconf_lease_drop(ni_addrconf_lease_t **leasep)
-{
-	ni_addrconf_lease_t *old;
-
-	if (leasep) {
-		old = *leasep;
-		*leasep = NULL;
-		ni_addrconf_lease_free(old);
-		return TRUE;
-	}
-	return FALSE;
-}
-
-ni_bool_t
-ni_addrconf_lease_move(ni_addrconf_lease_t **dst, ni_addrconf_lease_t **src)
-{
-	if (src && ni_addrconf_lease_hold(dst, *src))
-		return ni_addrconf_lease_drop(src);
-	return FALSE;
-}
-
-void
-ni_addrconf_lease_free(ni_addrconf_lease_t *lease)
-{
-	if (lease) {
-		ni_assert(lease->refcount);
-		lease->refcount--;
-		if (lease->refcount == 0) {
-			ni_addrconf_lease_destroy(lease);
-			free(lease);
-		}
-	}
 }
 
 static void

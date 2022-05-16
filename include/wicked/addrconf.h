@@ -8,6 +8,7 @@
 #define __WICKED_ADDRCONF_H__
 
 #include <wicked/types.h>
+#include <wicked/refcount.h>
 #include <wicked/constants.h>
 
 /*
@@ -120,7 +121,7 @@ typedef struct ni_dhcp_option		ni_dhcp_option_t;
 typedef struct ni_addrconf_updater	ni_addrconf_updater_t;
 
 struct ni_addrconf_lease {
-	unsigned int		refcount;
+	ni_refcount_t		refcount;
 	ni_addrconf_lease_t *	next;
 
 	ni_addrconf_updater_t *	updater;	/* update actions	*/
@@ -213,18 +214,18 @@ enum ni_lease_event {
 	NI_EVENT_LEASE_LOST
 };
 
-extern ni_addrconf_lease_t *ni_addrconf_lease_new(int type, int family);
-extern ni_addrconf_lease_t *ni_addrconf_lease_ref(ni_addrconf_lease_t *);
-extern ni_addrconf_lease_t *ni_addrconf_lease_clone(const ni_addrconf_lease_t *);
-extern ni_bool_t        ni_addrconf_lease_hold(ni_addrconf_lease_t **, ni_addrconf_lease_t *);
-extern ni_bool_t        ni_addrconf_lease_drop(ni_addrconf_lease_t **);
-extern ni_bool_t        ni_addrconf_lease_move(ni_addrconf_lease_t **, ni_addrconf_lease_t **);
-extern void		ni_addrconf_lease_destroy(ni_addrconf_lease_t *);
-extern void		ni_addrconf_lease_free(ni_addrconf_lease_t *);
-extern void		ni_addrconf_lease_list_destroy(ni_addrconf_lease_t **list);
+extern				ni_declare_refcounted_ref(ni_addrconf_lease);
+extern				ni_declare_refcounted_hold(ni_addrconf_lease);
+extern				ni_declare_refcounted_free(ni_addrconf_lease);
+extern				ni_declare_refcounted_drop(ni_addrconf_lease);
+extern				ni_declare_refcounted_move(ni_addrconf_lease);
 
-static inline int
-ni_addrconf_lease_is_valid(const ni_addrconf_lease_t *lease)
+extern ni_addrconf_lease_t *	ni_addrconf_lease_new(int type, int family);
+extern ni_addrconf_lease_t *	ni_addrconf_lease_clone(const ni_addrconf_lease_t *);
+extern void			ni_addrconf_lease_destroy(ni_addrconf_lease_t *);
+extern void			ni_addrconf_lease_list_destroy(ni_addrconf_lease_t **list);
+
+static inline int		ni_addrconf_lease_is_valid(const ni_addrconf_lease_t *lease)
 {
 	return lease && lease->state == NI_ADDRCONF_STATE_GRANTED;
 }
