@@ -275,6 +275,11 @@ ni_capture_inspect_udp_header(void *data, size_t bytes, size_t *payload_len,
 		return NULL;
 	}
 
+	if (ip_len < ihl) {
+		ni_debug_socket("bad IP header length, ignoring");
+		return NULL;
+	}
+
 	if (bytes < ihl) {
 		ni_debug_socket("truncated IP header, ignoring");
 		return NULL;
@@ -318,7 +323,7 @@ ni_capture_inspect_udp_header(void *data, size_t bytes, size_t *payload_len,
 		return NULL;
 	}
 
-	*payload_len = ip_len;
+	*payload_len = bytes;
 	return data;
 }
 
