@@ -285,18 +285,14 @@ ni_capture_inspect_udp_header(void *data, size_t bytes, size_t *payload_len,
 		return NULL;
 	}
 
-	if (checksum(iph, ihl) != 0) {
-		ni_debug_socket("bad IP header checksum, ignoring");
-		return NULL;
-	}
-
 	if (bytes < ip_len) {
 		ni_debug_socket("truncated IP packet, ignoring");
 		return NULL;
 	}
 
 	if (bytes > ip_len) {
-		ni_debug_socket("Received %x bytes, but ip_len is %x. Adjusting.", (int)bytes, ip_len);
+		ni_debug_socket("Received %zx bytes, but ip_len is %x. Adjusting.",
+				bytes, ip_len);
 		bytes = ip_len;
 	}
 
@@ -309,7 +305,12 @@ ni_capture_inspect_udp_header(void *data, size_t bytes, size_t *payload_len,
 	}
 
 	if (bytes < sizeof(*uh)) {
-		ni_debug_socket("truncated IP packet, ignoring");
+		ni_debug_socket("truncated UDP header, ignoring");
+		return NULL;
+	}
+
+	if (checksum(iph, ihl) != 0) {
+		ni_debug_socket("bad IP header checksum, ignoring");
 		return NULL;
 	}
 
