@@ -239,6 +239,8 @@ ni_managed_device_apply_policy(ni_managed_device_t *mdev, ni_managed_policy_t *m
 	case NI_MANAGED_STATE_STOPPING:
 	case NI_MANAGED_STATE_STOPPED:
 	case NI_MANAGED_STATE_LIMBO:
+	case NI_MANAGED_STATE_WAITING:
+	case NI_MANAGED_STATE_RECHECK:
 		/* Just install the new policy and reconfigure. */
 		break;
 
@@ -510,6 +512,8 @@ static ni_intmap_t	__managed_state_names[] = {
 	{ "stopping",	NI_MANAGED_STATE_STOPPING	},
 	{ "limbo",	NI_MANAGED_STATE_LIMBO		},
 	{ "failed",	NI_MANAGED_STATE_FAILED		},
+	{ "waiting",	NI_MANAGED_STATE_WAITING	},
+	{ "recheck",	NI_MANAGED_STATE_RECHECK	},
 	{ NULL }
 };
 
