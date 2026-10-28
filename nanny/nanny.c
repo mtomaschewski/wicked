@@ -158,11 +158,41 @@ ni_nanny_unschedule(ni_ifworker_array_t *array, ni_ifworker_t *w)
 	ni_ifworker_array_delete(array, w);
 }
 
-/*
- * Check whether a given interface should be reconfigured
- */
 static unsigned int
-ni_nanny_recheck(ni_nanny_t *mgr, ni_ifworker_t *w)
+ni_nanny_recheck_managed(ni_nanny_t *mgr, ni_managed_device_t *mdev, ni_ifworker_t *w)
+{
+	static const unsigned int MAX_POLICIES = 20;
+	ni_fsm_policy_array_t policies = NI_ARRAY_INIT;
+	const ni_fsm_policy_t *policy;
+	ni_managed_policy_t *mpolicy;
+	unsigned int count = 0;
+
+	if (!ni_fsm_get_applicable_policies(mgr->fsm, w, &policies, MAX_POLICIES)) {
+		ni_debug_verbose(NI_LOG_DEBUG2, NI_TRACE_APPLICATION,
+				"%s[#%u]: no applicable policies (managed %s, fsm %s)",
+				w->name, w->ifindex,
+				ni_managed_state_to_string(mdev->state),
+				ni_ifworker_state_name(w->fsm.state));
+		return count;
+	}
+
+	policy = policies.data[policies.count - 1];
+	mpolicy = ni_nanny_get_policy(mgr, policy);
+
+	/* Note, we also check devices in state FAILED.
+	 * ni_managed_device_apply_policy() will then check if the policy
+	 * changed. If it did, then we give it another try.
+	 */
+	if (ni_managed_device_apply_policy(mdev, mpolicy) == 0)
+		count++;
+
+	ni_fsm_policy_array_destroy(&policies);
+
+	return count;
+}
+
+static unsigned int
+ni_nanny_recheck_worker(ni_nanny_t *mgr, ni_ifworker_t *w)
 {
 	static const unsigned int MAX_POLICIES = 20;
 	ni_fsm_policy_array_t policies = NI_ARRAY_INIT;
@@ -171,13 +201,11 @@ ni_nanny_recheck(ni_nanny_t *mgr, ni_ifworker_t *w)
 	ni_managed_policy_t *mpolicy;
 	unsigned int count = 0;
 
-	/* Note, we also check devices in state FAILED.
-	 * ni_managed_device_apply_policy() will then check if the policy
-	 * changed. If it did, then we give it another try.
-	 */
-
 	if (!ni_fsm_get_applicable_policies(mgr->fsm, w, &policies, MAX_POLICIES)) {
-		ni_debug_nanny("%s: no applicable policies", w->name);
+		ni_debug_verbose(NI_LOG_DEBUG2, NI_TRACE_APPLICATION,
+				"%s[#%u]: no applicable policies (unmanaged, fsm %s)",
+				w->name, w->ifindex,
+				ni_ifworker_state_name(w->fsm.state));
 		return count;
 	}
 
@@ -198,6 +226,20 @@ ni_nanny_recheck(ni_nanny_t *mgr, ni_ifworker_t *w)
 	ni_fsm_policy_array_destroy(&policies);
 
 	return count;
+}
+
+/*
+ * Check whether a given interface should be reconfigured
+ */
+static unsigned int
+ni_nanny_recheck(ni_nanny_t *mgr, ni_ifworker_t *w)
+{
+	ni_managed_device_t *mdev;
+
+	if ((mdev = ni_nanny_get_device(mgr, w)))
+		return ni_nanny_recheck_managed(mgr, mdev, w);
+
+	return ni_nanny_recheck_worker(mgr, w);
 }
 
 unsigned int
