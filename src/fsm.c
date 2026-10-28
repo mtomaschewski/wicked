@@ -1954,21 +1954,49 @@ ni_ifworker_extra_waittime_from_xml(ni_ifworker_t *w)
 ni_iftype_t
 ni_ifworker_iftype_from_xml(xml_node_t *config)
 {
-	ni_iftype_t iftype;
+	xml_node_t *child;
+	int type;
 
-	if (!xml_node_is_empty(config)) {
-		for (iftype = 0; iftype < __NI_IFTYPE_MAX; iftype++) {
-			const char *iftype_name = ni_linktype_type_to_name(iftype);
+	if (xml_node_is_empty(config))
+		return NI_IFTYPE_UNKNOWN;
 
-			if (ni_string_empty(iftype_name))
-				continue;
-
-			if (xml_node_get_child(config, iftype_name))
-				return iftype;
-		}
+	for (child = config->children; child; child = child->next) {
+		type = ni_linktype_name_to_type(child->name);
+		if (type > NI_IFTYPE_UNKNOWN && type < __NI_IFTYPE_MAX)
+			return (ni_iftype_t)type;
 	}
 
 	return NI_IFTYPE_UNKNOWN;
+}
+
+/*
+ * Whether the link type node in the worker config triggers a newDevice
+ * call in a factory service, that is, wicked supports creating it.
+ */
+ni_bool_t
+ni_ifworker_config_is_factory(const ni_ifworker_t *w)
+{
+	const ni_dbus_service_t *service, *factory;
+	const ni_dbus_class_t *class;
+	ni_iftype_t iftype;
+
+	if (!w || xml_node_is_empty(w->config.node))
+		return FALSE;
+
+	iftype = ni_ifworker_iftype_from_xml(w->config.node);
+	if (iftype == NI_IFTYPE_UNKNOWN)
+		return FALSE;
+
+	if (!(class = ni_objectmodel_link_class(iftype)))
+		return FALSE;
+
+	if (!(service = ni_objectmodel_service_by_class(class)))
+		return FALSE;
+
+	if (!(factory = ni_objectmodel_factory_service(service)))
+		return FALSE;
+
+	return ni_dbus_service_get_method(factory, "newDevice") != NULL;
 }
 
 ni_bool_t
