@@ -176,6 +176,9 @@ ni_nanny_recheck_managed(ni_nanny_t *mgr, ni_managed_device_t *mdev, ni_ifworker
 	unsigned int count = 0;
 
 	switch (mdev->state) {
+	case NI_MANAGED_STATE_RUNNING:
+		return count;
+
 	case NI_MANAGED_STATE_WAITING:
 		if (!ni_nanny_device_available(w)) {
 			ni_debug_verbose(NI_LOG_DEBUG2, NI_TRACE_APPLICATION,
@@ -287,22 +290,22 @@ unsigned int
 ni_nanny_recheck_do(ni_nanny_t *mgr)
 {
 	ni_ifworker_array_t request = NI_IFWORKER_ARRAY_INIT;
+	ni_ifworker_array_t recheck = NI_IFWORKER_ARRAY_INIT;
 	unsigned int i, count = 0;
 	ni_fsm_t *fsm = mgr->fsm;
 
 	ni_assert(fsm);
 	ni_ifworker_array_move(&request, &mgr->request);
+	ni_ifworker_array_move(&recheck, &mgr->recheck);
+
 	for (i = 0; i < request.count; ++i)
 		count += ni_nanny_recheck(mgr, request.data[i], TRUE);
+
+	for (i = 0; i < recheck.count; ++i)
+		count += ni_nanny_recheck(mgr, recheck.data[i], FALSE);
+
 	ni_ifworker_array_destroy(&request);
-
-	for (i = 0; i < mgr->recheck.count; ++i) {
-		ni_ifworker_t *w = mgr->recheck.data[i];
-
-		if (!w->dead && !w->pending && !w->kickstarted && !w->done && !w->failed)
-			count += ni_nanny_recheck(mgr, w, FALSE);
-	}
-
+	ni_ifworker_array_destroy(&recheck);
 	return count;
 }
 

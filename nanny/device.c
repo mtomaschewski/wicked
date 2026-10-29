@@ -206,6 +206,9 @@ ni_managed_device_apply_policies(ni_managed_device_t *mdev, const ni_fsm_policy_
 		return -1;
 	}
 
+	if (w->done || w->failed)
+		ni_ifworker_rearm(w);
+
 	/* Now do the fandango */
 	return ni_managed_device_up(mdev);
 }
