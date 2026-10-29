@@ -3788,7 +3788,7 @@ ni_fsm_start_matching_workers(ni_fsm_t *fsm, ni_ifworker_array_t *marked)
 		if (w->failed)
 			continue;
 
-		if (!ni_ifworker_is_device_created(w) && !ni_ifworker_is_factory_device(w)) {
+		if (!ni_ifworker_is_device_created(w) && !ni_ifworker_config_is_factory(w)) {
 			w->pending = TRUE;
 			ni_ifworker_set_timeout(fsm, w, fsm->worker_timeout);
 			count++;
@@ -3903,9 +3903,6 @@ ni_ifworker_device_delete(ni_ifworker_t *w)
 	ni_ifworker_destroy_action_table(w);
 	ni_ifworker_destroy_device_api(w);
 	ni_ifworker_rearm(w);
-
-	ni_ifworker_drop(&w->lowerdev);
-	ni_ifworker_drop(&w->masterdev);
 
 	ni_ifworker_free(ref);
 }
@@ -6858,7 +6855,10 @@ ni_fsm_process_worker_event(ni_fsm_t *fsm, ni_ifworker_t *w, ni_fsm_event_t *ev)
 	ni_ifworker_advance_state(w, event_type);
 
 	if (event_type == NI_EVENT_DEVICE_DELETE) {
-		if (ni_ifworker_is_factory_device(w))
+		/* keep a managed or configured worker when its device is deleted:
+		 * the device may reappear, e.g. on a driver rebind, or wicked
+		 * creates it again */
+		if (w->managed || w->config.node)
 			ni_ifworker_device_delete(w);
 		else
 			ni_fsm_delete_worker(fsm, w);

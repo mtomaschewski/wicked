@@ -158,6 +158,15 @@ ni_nanny_unschedule(ni_ifworker_array_t *array, ni_ifworker_t *w)
 	ni_ifworker_array_delete(array, w);
 }
 
+static ni_bool_t
+ni_nanny_device_available(const ni_ifworker_t *w)
+{
+	if (w->lowerdev && !ni_ifworker_is_device_created(w->lowerdev))
+		return FALSE;
+
+	return ni_ifworker_is_device_created(w) || ni_ifworker_config_is_factory(w);
+}
+
 static unsigned int
 ni_nanny_recheck_managed(ni_nanny_t *mgr, ni_managed_device_t *mdev, ni_ifworker_t *w,
 			ni_bool_t requested)
@@ -167,10 +176,24 @@ ni_nanny_recheck_managed(ni_nanny_t *mgr, ni_managed_device_t *mdev, ni_ifworker
 	unsigned int count = 0;
 
 	switch (mdev->state) {
+	case NI_MANAGED_STATE_WAITING:
+		if (!ni_nanny_device_available(w)) {
+			ni_debug_verbose(NI_LOG_DEBUG2, NI_TRACE_APPLICATION,
+					"%s: waiting for the device", w->name);
+			return count;
+		}
+		break;
+
 	case NI_MANAGED_STATE_RECHECK:
 		if (!requested) {
 			ni_debug_verbose(NI_LOG_DEBUG2, NI_TRACE_APPLICATION,
 					"%s: waiting for a recheck request", w->name);
+			return count;
+		}
+		if (!ni_nanny_device_available(w)) {
+			ni_debug_nanny("%s: wait for the device in state %s", w->name,
+					ni_managed_state_to_string(mdev->state));
+			mdev->state = NI_MANAGED_STATE_WAITING;
 			return count;
 		}
 		break;
@@ -576,6 +599,7 @@ ni_nanny_register_device(ni_nanny_t *mgr, ni_ifworker_t *w)
 		ni_nanny_schedule_recheck(&mgr->recheck, w);
 
 	ni_ifworker_set_progress_callback(w, ni_managed_device_progress, mdev);
+	w->managed = TRUE;
 	return mdev;
 }
 
@@ -596,11 +620,53 @@ ni_nanny_unregister_device(ni_nanny_t *mgr, ni_ifworker_t *w)
 
 	ni_ifworker_set_progress_callback(w, NULL, NULL);
 	ni_ifworker_set_completion_callback(w, NULL, NULL);
+	w->managed = FALSE;
 
-	if (!ni_ifworker_is_factory_device(w) ||
-	    !ni_fsm_exists_applicable_policy(mgr->fsm, w)) {
-		ni_nanny_unschedule(&mgr->recheck, w);
-		ni_nanny_unschedule(&mgr->request, w);
+	ni_nanny_unschedule(&mgr->recheck, w);
+	ni_nanny_unschedule(&mgr->request, w);
+}
+
+/*
+ * Wait for a managed device whose network interface disappeared from the
+ * kernel, e.g. on a driver unbind or a link delete. It stays managed until
+ * nanny unregisters it, e.g. when its last policy is deleted: the fsm keeps
+ * the managed worker, and a waiting device is rechecked on device-ready
+ * when it or its lower device reappears.
+ */
+static void
+ni_nanny_device_wait(ni_nanny_t *mgr, ni_ifworker_t *w)
+{
+	ni_managed_device_t *mdev;
+
+	if (!(mdev = ni_nanny_get_device(mgr, w)))
+		return;
+
+	ni_debug_nanny("%s: wait for the device in state %s", w->name,
+			ni_managed_state_to_string(mdev->state));
+
+	if (mdev->state == NI_MANAGED_STATE_RECHECK)
+		return;
+
+	mdev->state = NI_MANAGED_STATE_WAITING;
+	mdev->fail_count = 0;
+	ni_secret_array_destroy(&mdev->secrets);
+}
+
+static void
+ni_nanny_recheck_upper_devices(ni_nanny_t *mgr, ni_ifworker_t *lower)
+{
+	ni_managed_device_t *mdev;
+	ni_ifworker_t *w;
+
+	if (lower->type != NI_IFWORKER_TYPE_NETDEV)
+		return;
+
+	for (mdev = mgr->device_list; mdev; mdev = mdev->next) {
+		if (!(w = ni_managed_device_get_worker(mdev)) || w->lowerdev != lower)
+			continue;
+
+		if (mdev->state == NI_MANAGED_STATE_WAITING)
+			ni_nanny_schedule_recheck(&mgr->recheck, w);
 	}
 }
 
@@ -997,10 +1063,12 @@ ni_nanny_process_fsm_event(ni_fsm_t *fsm, ni_ifworker_t *w, ni_fsm_event_t *ev)
 		/* the recheck registers a managed device once a policy applies */
 		if (ni_fsm_exists_applicable_policy(mgr->fsm, w))
 			ni_nanny_schedule_recheck(&mgr->recheck, w);
+		if (ev->event_type == NI_EVENT_DEVICE_READY)
+			ni_nanny_recheck_upper_devices(mgr, w);
 		break;
 
 	case NI_EVENT_DEVICE_DELETE:
-		ni_nanny_unregister_device(mgr, w);
+		ni_nanny_device_wait(mgr, w);
 		break;
 
 	case NI_EVENT_DEVICE_DOWN:

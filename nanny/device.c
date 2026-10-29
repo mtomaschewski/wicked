@@ -198,6 +198,14 @@ ni_managed_device_apply_policies(ni_managed_device_t *mdev, const ni_fsm_policy_
 			ni_managed_state_to_string(mdev->state),
 			ni_ifworker_state_name(w->fsm.state));
 
+	/* Start a device that exists or that wicked can create, otherwise
+	 * wait until the device shows up. */
+	if (!ni_ifworker_is_device_created(w) && !ni_ifworker_config_is_factory(w)) {
+		ni_debug_nanny("%s: waiting for the device to appear", w->name);
+		mdev->state = NI_MANAGED_STATE_WAITING;
+		return -1;
+	}
+
 	/* Now do the fandango */
 	return ni_managed_device_up(mdev);
 }
@@ -217,6 +225,7 @@ ni_managed_device_up_done(ni_ifworker_t *w)
 	}
 
 	switch (mdev->state) {
+	case NI_MANAGED_STATE_WAITING:
 	case NI_MANAGED_STATE_RECHECK:
 		return;
 	default:
