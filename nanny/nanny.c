@@ -647,12 +647,32 @@ ni_nanny_device_wait(ni_nanny_t *mgr, ni_ifworker_t *w)
 	ni_debug_nanny("%s: wait for the device in state %s", w->name,
 			ni_managed_state_to_string(mdev->state));
 
-	if (mdev->state == NI_MANAGED_STATE_RECHECK)
-		return;
+	if (mdev->state != NI_MANAGED_STATE_RECHECK) {
+		mdev->state = NI_MANAGED_STATE_WAITING;
+		mdev->fail_count = 0;
+		ni_secret_array_destroy(&mdev->secrets);
+	}
 
-	mdev->state = NI_MANAGED_STATE_WAITING;
-	mdev->fail_count = 0;
-	ni_secret_array_destroy(&mdev->secrets);
+	for (mdev = mgr->device_list; mdev; mdev = mdev->next) {
+		ni_ifworker_t *upper = ni_managed_device_get_worker(mdev);
+
+		if (!upper || upper->lowerdev != w)
+			continue;
+
+		switch (mdev->state) {
+		case NI_MANAGED_STATE_STARTING:
+		case NI_MANAGED_STATE_RUNNING:
+		case NI_MANAGED_STATE_LIMBO:
+		case NI_MANAGED_STATE_FAILED:
+			ni_debug_nanny("%s: wait for the lower device %s", upper->name, w->name);
+			mdev->state = NI_MANAGED_STATE_WAITING;
+			mdev->fail_count = 0;
+			ni_ifworker_rearm(upper);
+			break;
+		default:
+			break;
+		}
+	}
 }
 
 static void
