@@ -104,7 +104,6 @@ struct ni_nanny {
 
 	ni_ifworker_array_t	request;
 	ni_ifworker_array_t	recheck;
-	ni_ifworker_array_t	down;
 
 	ni_nanny_user_t *	users;
 
@@ -133,7 +132,6 @@ extern void			ni_nanny_recheck_policies(ni_nanny_t *, const ni_string_array_t *)
 extern void			ni_nanny_schedule_recheck(ni_ifworker_array_t *, ni_ifworker_t *);
 extern void			ni_nanny_unschedule(ni_ifworker_array_t *, ni_ifworker_t *);
 extern unsigned int		ni_nanny_recheck_do(ni_nanny_t *mgr);
-extern unsigned int		ni_nanny_down_do(ni_nanny_t *mgr);
 extern ni_managed_device_t *	ni_nanny_register_device(ni_nanny_t *, ni_ifworker_t *);
 extern void			ni_nanny_unregister_device(ni_nanny_t *, ni_ifworker_t *);
 extern void			ni_nanny_device_policy_changed(ni_nanny_t *, ni_managed_device_t *);
@@ -151,6 +149,7 @@ extern int			ni_nanny_create_policy(ni_dbus_object_t **, ni_nanny_t *, xml_docum
 extern ni_bool_t		ni_nanny_policy_drop(const char *);
 
 extern ni_bool_t		ni_managed_netif_enable(ni_managed_device_t *);
+extern ni_bool_t		ni_managed_netif_disable(ni_managed_device_t *);
 extern void			ni_managed_netif_apply_policy(ni_managed_device_t *, ni_managed_policy_t *, ni_fsm_t *);
 extern void			ni_managed_netif_up(ni_managed_device_t *, unsigned int);
 
@@ -163,7 +162,6 @@ extern ni_ifworker_t *		ni_managed_device_get_worker(const ni_managed_device_t *
 extern char *			ni_managed_device_get_name(ni_managed_device_t *);
 extern int			ni_managed_device_apply_policies(ni_managed_device_t *,
 							const ni_fsm_policy_array_t *);
-extern void			ni_managed_device_down(ni_managed_device_t *mdev);
 extern ni_bool_t		ni_managed_policy_filename(const char *, char *, size_t);
 
 extern ni_dbus_object_t *	ni_managed_policy_register(ni_nanny_t *, ni_fsm_policy_t *);
