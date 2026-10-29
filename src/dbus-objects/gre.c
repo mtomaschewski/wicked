@@ -191,16 +191,17 @@ ni_objectmodel_gre_change(ni_dbus_object_t *object, const ni_dbus_method_t *meth
 	if (ni_string_empty(cfg->name))
 		ni_string_dup(&cfg->name, dev->name);
 
-	if (ni_netdev_device_is_up(dev)) {
-		ni_debug_objectmodel("Skipping gre changeDevice call on %s: "
-				"device is up", dev->name);
-		return TRUE;
-	}
-
 	if (!ni_string_empty(cfg->link.lowerdev.name) &&
 	    !ni_objectmodel_bind_netdev_ref_index(cfg->name, "gre tunnel",
 					&cfg->link.lowerdev, nc, error))
 		return FALSE;
+
+	if (ni_netdev_device_is_up(dev) &&
+	    cfg->link.lowerdev.index == dev->link.lowerdev.index) {
+		ni_debug_objectmodel("Skipping gre changeDevice call on %s: "
+				"device is up", dev->name);
+		return TRUE;
+	}
 
 	if (ni_system_tunnel_change(nc, dev, cfg) < 0) {
 		dbus_set_error(error,
